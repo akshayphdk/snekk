@@ -2,6 +2,8 @@ import curses
 import sys
 import locale
 
+from curses import KEY_RIGHT,KEY_LEFT,KEY_UP,KEY_DOWN
+
 class Field:
 
   def __init__(self,size):
@@ -23,7 +25,7 @@ class Snake:
     self.__head = (head_x,head_y)
     self.__len = 3
     self.__body = [(head_x-1,head_y),(head_x-2,head_y)]
-    self.__direction = curses.KEY_RIGHT
+    self.__direction = KEY_RIGHT
 
   def get_length(self):
     return self.__len
@@ -44,13 +46,14 @@ class Snake:
     self.__body = [point] + self.__body
 
   def pop_body(self):
-    self.__body.pop()
+    return self.__body.pop()
 
   def render_snake(self,win):
+    code = locale.getpreferredencoding()
     x,y = self.get_head()
-    win.addch(y,x,curses.ACS_BLOCK)
+    win.addch(y,x,curses.ACS_DIAMOND)
     for point in self.__body:
-      win.addch(point[1],point[0],curses.ACS_BLOCK)
+      win.addch(point[1],point[0],curses.ACS_DIAMOND)
 
   def get_direction(self):
     return self.__direction
@@ -86,9 +89,42 @@ def play_game(win,field):
   snake = Snake(fw//2,fh//2)
   key = 0
   score = 0
+  win.timeout(90)
+  win.addstr(0,(fw//2)-6,' SNEKK v0.1 ')
+  win.addstr(fh-1,fw-14,' Score:'+format(score,'04d')+' ')
   try:
     while key != 27:
-      win.addstr(fh-1,fw-14,' Score:'+format(score,'04d')+' ')
+      if key in [KEY_LEFT,KEY_RIGHT,KEY_UP,KEY_DOWN]:
+        if (key == KEY_LEFT and snake.get_direction() != KEY_RIGHT) or \
+           (key == KEY_RIGHT and snake.get_direction() != KEY_LEFT) or \
+           (key == KEY_UP and snake.get_direction() != KEY_DOWN) or \
+           (key == KEY_DOWN and snake.get_direction() != KEY_UP):
+          snake.set_direction(key)
+      old_head = snake.get_head()
+      if snake.get_direction() == KEY_RIGHT:
+        if old_head[0] == fw-2:
+          snake.set_head((1,old_head[1]))
+        else:
+          snake.set_head((old_head[0]+1,old_head[1]))
+      elif snake.get_direction() == KEY_LEFT:
+        if old_head[0] == 1:
+          snake.set_head((fw-2,old_head[1]))
+        else:
+          snake.set_head((old_head[0]-1,old_head[1]))
+      elif snake.get_direction() == KEY_UP:
+        if old_head[1] == 1:
+          snake.set_head((old_head[0],fh-2))
+        else:
+          snake.set_head((old_head[0],old_head[1]-1))
+      else:
+        if old_head[1] == fh-2:
+          snake.set_head((old_head[0],1))
+        else:
+          snake.set_head((old_head[0],old_head[1]+1))
+    
+      snake.add_body(old_head)
+      tail = snake.pop_body()
+      win.addch(tail[1],tail[0],' ')
       snake.render_snake(win)
         
       key = win.getch() 
