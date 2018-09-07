@@ -177,6 +177,16 @@ def play_game(win,field):
     print("play exception:",str(e))
     exit(1)
 
+  return snake.get_length()-3
+
+def display_score(win,score,field):
+  fh = field.get_height()
+  fw = field.get_width()
+  key = 0
+  while key != 27:
+    win.addstr(fh//2,(fw//2)-5,'GAME OVER!')
+    key = win.getch()
+
 def revert_customization(win):
   win.nodelay(0)
   win.border(1)
@@ -202,7 +212,8 @@ if __name__ == '__main__':
   stdscr = initialize()
   win = spawn_window(field.get_height(),field.get_width())
   customize_curse(win)
-  play_game(win,field)
+  score = play_game(win,field)
+  display_score(win,score,field)
   revert_customization(win)
   terminate()
 
