@@ -7,13 +7,17 @@ from curses import KEY_RIGHT,KEY_LEFT,KEY_UP,KEY_DOWN
 
 class Field:
 
-  def __init__(self,size):
+  def __init__(self,size,rate):
     # dictionary to determine size of playing field.
-    self.__size_map = {'small':  {'width': 40, 'height': 20},
+    self.__size_map = {'small' : {'width': 40, 'height': 20},
                        'medium': {'width': 60, 'height': 30},
-                       'large':  {'width': 80, 'height': 40}}
+                       'large' : {'width': 80, 'height': 40}}
+    self.__speed_map = {'slow'     : 180,
+                        'moderate' : 90,
+                        'fast'     : 30}
     self.__width = self.__size_map[size]['width']
     self.__height = self.__size_map[size]['height']
+    self.__rate = self.__speed_map[rate]
 
   # accessor for field height.
   def get_height(self):
@@ -22,6 +26,9 @@ class Field:
   #accessor for field width.
   def get_width(self):
     return self.__width
+
+  def get_rate(self):
+    return self.__rate
 
   # method to generate food randomly within the field.
   def spawn_food(self):
@@ -110,11 +117,12 @@ def play_game(win,field):
 
   fw = field.get_width()
   fh = field.get_height()
+  rate = field.get_rate()
 
   snake = Snake(fw//2,fh//2)
   key = 0
 
-  win.timeout(90)
+  win.timeout(rate)
   win.addstr(0,(fw//2)-6,' SNEKK v0.1 ')
 
   food = (3*fw//4,3*fh//4)
@@ -202,13 +210,18 @@ if __name__ == '__main__':
 
   if len(sys.argv) > 1:
     scrsize = sys.argv[1]
+    rate = sys.argv[2]
     if not scrsize in ['small','medium','large']:
       print('Invalid screen size provided. Exiting...')
       exit(1)
+    if not rate in ['slow','moderate','fast']:
+      print('Invalid level of difficulty provided. Exiting...')
+      exit(1)
   else:
     scrsize = 'small'
+    rate = 'moderate'
 
-  field = Field(scrsize)
+  field = Field(scrsize,rate)
   stdscr = initialize()
   win = spawn_window(field.get_height(),field.get_width())
   customize_curse(win)
